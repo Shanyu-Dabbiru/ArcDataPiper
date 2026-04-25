@@ -24,8 +24,8 @@ let pendingDlqCommit = null;
 let agentConsumerRef = null;
 let metrics = { processed: 0, errors: 0 };
 const provider = new ethers.JsonRpcProvider(process.env.ARC_TESTNET_RPC);
-const buyerWallet = new ethers.Wallet(process.env.NANOPAY_BUYER_PRIVATE_KEY);
-const managedBuyerWallet = new ethers.NonceManager(buyerWallet.connect(provider));
+const buyerWallet = new ethers.Wallet(process.env.NANOPAY_BUYER_PRIVATE_KEY, provider);
+const managedBuyerWallet = new ethers.NonceManager(buyerWallet);
 
 const normalizeAddress = (address) => String(address || '').toLowerCase();
 
@@ -198,6 +198,9 @@ const runHealingFlow = async (badPayload) => {
   isHealing = true;
   systemState = 'HEALING';
   broadcast({ type: 'system_state', state: systemState });
+  
+  // Flush cross-process memory cache to sync with whatever transformer.js just sent
+  if (typeof managedBuyerWallet.reset === 'function') managedBuyerWallet.reset();
 
   try {
     updateAgentStatus('discovery', 'ANALYZING');
@@ -246,10 +249,18 @@ const runHealingFlow = async (badPayload) => {
     await executeAndRecordOnChainCharge('Fixer', actualCost, tokenDesc);
 
     const responseText = response.choices[0].message.content || '';
-    let code = String(responseText)
-      .trim()
-      .replace(/^```(?:javascript|js)?\n?/, '')
-      .replace(/\n?```$/, '');
+    let code = String(responseText).trim();
+    
+    const codeMatch = code.match(/```(?:javascript|js)?\n([\s\S]*?)```/);
+    if (codeMatch) {
+      code = codeMatch[1].trim();
+    }
+    
+    code = code.replace(/^(?:const|let|var)\s+\w+\s*=\s*/, '');
+    
+    if (code.endsWith(';')) {
+      code = code.slice(0, -1);
+    }
 
     updateAgentStatus('fixer', 'DONE');
 
