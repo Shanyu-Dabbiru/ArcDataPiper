@@ -5,4 +5,5 @@ implementation_plan.md
 node_modules/
 hackathon.md
 nanopayment_integration.md
+.DS_Store
 
