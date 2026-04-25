@@ -9,11 +9,12 @@ function EconomyPanel({
       className="panel-economy"
       style={{
         position: 'relative',
-        padding: '16px',
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 1fr)',
-        gap: '18px',
-        alignItems: 'start',
+        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px',
+        minHeight: '400px',
+        overflow: 'hidden'
       }}
     >
       {showAlert && (
@@ -21,46 +22,85 @@ function EconomyPanel({
           <div
             style={{
               position: 'absolute',
-              top: '12px',
-              right: '12px',
-              background: 'rgba(239, 68, 68, 0.2)',
-              color: '#fecaca',
-              border: '1px solid rgba(248, 113, 113, 0.9)',
-              borderRadius: '8px',
-              padding: '7px 10px',
-              fontWeight: 700,
-              fontSize: '0.85rem',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              background: 'rgba(225, 29, 72, 0.95)',
+              color: '#ffffff',
+              borderRadius: '16px',
+              padding: '24px 32px',
+              fontWeight: 800,
+              fontSize: '1.2rem',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+              border: '2px solid rgba(255, 255, 255, 0.2)',
+              textAlign: 'center',
+              width: '80%',
+              zIndex: 10,
             }}
           >
-            Alert: {alertText}
+            <div style={{ fontSize: '0.8rem', opacity: 0.8, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>System Alert</div>
+            {alertText}
           </div>
         </div>
       )}
 
-      <div>
-        <h2 style={{ margin: '0 0 10px' }}>Totalizer</h2>
-        <div className="live-totalizer">${Number(total).toFixed(2)}</div>
+      {/* Totalizer Section */}
+      <div style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '16px' }}>
+        <h2 style={{ 
+          margin: '0 0 12px', 
+          fontSize: '0.8rem', 
+          textTransform: 'uppercase', 
+          letterSpacing: '0.1em', 
+          color: 'var(--text-muted)' 
+        }}>
+          Live Totalizer
+        </h2>
+        <div className={`live-totalizer ${total > 0 ? 'live-totalizer-pulse' : ''}`} key={total} style={{ fontSize: '4rem' }}>
+          ${Number(total).toFixed(4)}
+        </div>
       </div>
 
-      <div>
-        <h3 style={{ margin: '0 0 10px' }}>Transaction Feed</h3>
-        <div style={{ display: 'grid', gap: '8px', maxHeight: '220px', overflowY: 'auto' }}>
+      {/* Transaction Feed Section */}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <h3 style={{ 
+          margin: '0 0 16px', 
+          fontSize: '0.8rem', 
+          textTransform: 'uppercase', 
+          letterSpacing: '0.1em', 
+          color: 'var(--text-muted)' 
+        }}>
+          Transaction Feed
+        </h3>
+        <div style={{ 
+          display: 'grid', 
+          gap: '10px', 
+          overflowY: 'auto',
+          paddingRight: '6px'
+        }}>
           {transactions.map((tx, index) => (
             <div
               key={`${tx.id || tx.description || 'tx'}-${index}`}
               style={{
                 fontFamily: 'var(--font-mono)',
-                borderBottom: '1px dashed #2f3f56',
-                paddingBottom: '6px',
-                color: 'var(--text-muted)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.03)',
+                paddingBottom: '8px',
+                color: 'var(--text-primary)',
+                fontSize: '0.85rem'
               }}
             >
-              [{tx.agent || 'SYSTEM'}] ${Number(tx.cost || 0).toFixed(4)} - {tx.description || 'No details'}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                <span style={{ color: 'var(--emerald-500)', fontWeight: 700, fontSize: '0.8rem' }}>{tx.agent || 'SYSTEM'}</span>
+                <span style={{ opacity: 0.4, fontSize: '0.75rem' }}>{new Date(tx.timestamp || Date.now()).toLocaleTimeString()}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ opacity: 0.7, fontSize: '0.8rem' }}>{tx.description || 'No details'}</span>
+                <span style={{ color: 'var(--emerald-500)', fontWeight: 800 }}>+${Number(tx.cost || 0).toFixed(4)}</span>
+              </div>
             </div>
           ))}
           {transactions.length === 0 && (
-            <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-              No transactions yet.
+            <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', opacity: 0.4, fontSize: '0.8rem' }}>
+              Waiting for stream activity...
             </div>
           )}
         </div>

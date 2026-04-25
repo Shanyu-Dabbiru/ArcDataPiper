@@ -11,21 +11,30 @@ const DEFAULT_RECORDS = [
   },
 ];
 
-function WaterfallLog({ records = DEFAULT_RECORDS, maxHeight = 320 }) {
+function WaterfallLog({ records = DEFAULT_RECORDS, maxHeight = 340 }) {
   return (
-    <section className="panel-waterfall" style={{ padding: '16px', minHeight: '220px' }}>
-      <h2 style={{ margin: '0 0 12px' }}>Waterfall Log</h2>
+    <section className="panel-waterfall" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+      <h2 style={{ 
+        margin: '0 0 16px', 
+        fontSize: '0.9rem', 
+        textTransform: 'uppercase', 
+        letterSpacing: '0.05em', 
+        color: 'var(--text-muted)' 
+      }}>
+        Waterfall Log
+      </h2>
       <div
         style={{
-          border: '1px solid #1f2a3d',
-          borderRadius: '10px',
-          padding: '10px',
+          flex: 1,
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '12px',
+          padding: '16px',
           maxHeight,
           overflowY: 'auto',
-          background: '#090f1b',
+          background: '#04070e',
           fontFamily: 'var(--font-mono)',
           fontSize: '0.8rem',
-          lineHeight: 1.45,
+          lineHeight: 1.5,
         }}
       >
         {records.map((record, index) => {
@@ -34,34 +43,37 @@ function WaterfallLog({ records = DEFAULT_RECORDS, maxHeight = 320 }) {
             <article
               key={`${record.timestamp}-${index}`}
               style={{
-                padding: '8px 0',
-                borderBottom: '1px solid #192538',
-                color: '#dbe6f8',
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
+                padding: '10px 0',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.03)',
+                color: '#e2e8f0',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <span style={{ opacity: 0.72 }}>{record.timestamp}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                <span style={{ opacity: 0.5, fontSize: '0.75rem' }}>{record.timestamp}</span>
                 <span
                   style={{
-                    borderRadius: '999px',
-                    fontSize: '0.72rem',
-                    padding: '2px 8px',
-                    fontWeight: 700,
-                    letterSpacing: '0.02em',
-                    background: isMatch ? 'rgba(16, 185, 129, 0.22)' : 'rgba(239, 68, 68, 0.24)',
-                    color: isMatch ? '#39d98a' : '#ff7f7f',
+                    borderRadius: '4px',
+                    fontSize: '0.7rem',
+                    padding: '1px 6px',
+                    fontWeight: 800,
+                    letterSpacing: '0.05em',
+                    background: isMatch ? 'rgba(16, 185, 129, 0.15)' : 'rgba(225, 29, 72, 0.2)',
+                    color: isMatch ? '#10b981' : '#f43f5e',
+                    border: `1px solid ${isMatch ? 'rgba(16, 185, 129, 0.3)' : 'rgba(225, 29, 72, 0.3)'}`
                   }}
                 >
-                  [{isMatch ? 'OK' : 'MISMATCH'}]
+                  {isMatch ? 'OK' : 'MISMATCH'}
                 </span>
               </div>
-              <div>{JSON.stringify(record.payload)}</div>
+              <div style={{ wordBreak: 'break-all', opacity: 0.9 }}>{JSON.stringify(record.payload)}</div>
             </article>
           );
         })}
-        {records.length === 0 && <div style={{ color: 'var(--text-muted)' }}>No records yet.</div>}
+        {records.length === 0 && (
+          <div style={{ color: 'var(--text-muted)', opacity: 0.4, fontStyle: 'italic' }}>
+            Listening for upstream data...
+          </div>
+        )}
       </div>
     </section>
   );
