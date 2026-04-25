@@ -31,6 +31,7 @@ app.post('/api/internal/update-logic', (req, res) => {
     if (typeof testResult.total_price !== 'number') throw new Error('Function output failed smoke test');
     
     currentLogic = newFn; // Hot-Swap completed natively in memory
+    if (typeof nonceManager.reset === 'function') nonceManager.reset(); // Sync with network
     res.json({ ok: true, version: `patch-${Date.now()}` });
   } catch (err) {
     res.status(400).json({ error: err.message });
