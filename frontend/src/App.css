@@ -1,32 +1,89 @@
-.app-container {
+/* ─── App Shell Layout ─── */
+.app-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
+  grid-template-columns: 800px minmax(0, 1fr); /* Dominant left column for schema focus */
+  gap: 32px;
+  width: 100%;
+  max-width: none; /* Let it fill the screen */
+  margin: 0;
+  min-height: calc(100vh - 40px);
+  padding: 24px; /* Reduced side margins */
+  box-sizing: border-box;
 }
 
-.app-column {
-  display: grid;
-  gap: 20px;
-  align-content: start;
+/* Sidebar */
+.app-sidebar {
+  background: var(--bg-sidebar, #f1f5f9);
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-lg, 14px);
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
+/* Main Content: Vertical Stack */
+.app-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.app-main-top {
+  height: 400px;
+}
+
+.app-main-bottom {
+  display: grid;
+  grid-template-columns: 400px minmax(0, 1fr); /* Agent panel on the left, Economy on the right */
+  gap: 24px;
+  flex: 1;
+}
+
+.panel-waterfall {
+  height: 100%;
+}
+
+.panel-agents {
+  height: 100%;
+}
+
+.panel-economy {
+  height: 100%;
+}
+
+/* Header */
 header {
-  text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 8px;
-  background: linear-gradient(90deg, #38bdf8, #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 1.6rem;
+  margin: 0 0 4px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-title, #0f172a);
 }
 
-@media (max-width: 980px) {
-  .app-container {
+header p {
+  margin: 0;
+  color: var(--text-body, #334155);
+  font-size: 0.95rem;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .app-layout {
     grid-template-columns: 1fr;
+  }
+
+  .app-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+      "waterfall"
+      "agents"
+      "economy";
   }
 }
