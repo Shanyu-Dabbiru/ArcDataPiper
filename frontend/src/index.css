@@ -50,58 +50,10 @@ body {
   line-height: 1.45;
 }
 
-/* Enterprise shell layout */
-#root .app-container,
-.enterprise-layout {
-  display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: 22px;
-  max-width: 1600px;
-  margin: 0 auto;
-}
-
-#root .app-container > .app-column:first-child,
-.enterprise-sidebar {
-  background: var(--bg-sidebar);
-  border: 1px solid var(--slate-200);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-}
-
-#root .app-container > .app-column:last-child,
-.enterprise-main {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: minmax(260px, 1fr) minmax(420px, 2fr);
-  grid-template-areas:
-    "waterfall agents"
-    "economy economy";
-  gap: 20px;
-}
-
-/* Compatibility mapping for the current component tree */
-#root .app-container > .app-column:last-child > section:first-child {
-  grid-area: agents;
-}
-
-#root .app-container > .app-column:last-child > section:last-child {
-  grid-area: economy;
-}
-
-.panel-waterfall {
-  grid-area: waterfall;
-}
-
-.panel-agents {
-  grid-area: agents;
-}
-
+/* Panel styling */
+.panel-waterfall,
+.panel-agents,
 .panel-economy {
-  grid-area: economy;
-}
-
-#root .app-column > section,
-.enterprise-panel {
   background: var(--bg-card);
   color: var(--text-primary);
   border: 1px solid var(--bg-card-glow);
@@ -212,24 +164,12 @@ body {
   box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
 }
 
-@media (max-width: 1180px) {
-  #root .app-container,
-  .enterprise-layout {
-    grid-template-columns: 1fr;
-  }
+@keyframes pulse-emerald {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); text-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+  100% { transform: scale(1); }
+}
 
-  #root .app-container > .app-column:first-child,
-  .enterprise-sidebar {
-    width: 100%;
-  }
-
-  #root .app-container > .app-column:last-child,
-  .enterprise-main {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-    grid-template-areas:
-      "waterfall"
-      "agents"
-      "economy";
-  }
+.live-totalizer-pulse {
+  animation: pulse-emerald 0.5s ease-out;
 }
