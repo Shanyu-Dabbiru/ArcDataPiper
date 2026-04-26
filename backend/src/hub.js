@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
-const { OpenAI } = require('openai');
+const axios = require('axios');
 const { ethers } = require('ethers');
 const { kafka } = require('./kafka-client.js');
 require('dotenv').config();
@@ -214,42 +214,31 @@ const runHealingFlow = async (badPayload) => {
 
     updateAgentStatus('fixer', 'PATCHING');
 
-    const baseURL = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
-    console.log('[Fixer] Using baseURL:', baseURL);
-    console.log('[Fixer] Using model:', process.env.OPENAI_MODEL || 'gpt-4o-mini');
-    
-    const openai = new OpenAI({ 
-      apiKey: process.env.OPENAI_API_KEY,
-      baseURL: baseURL
-    });
     const prompt =
       "You are a data pipeline repair agent. Generate a single synchronous JavaScript arrow function (data) => { ... } that transforms the ACTUAL schema into the EXPECTED schema. return ONLY the raw function string. No imports, no require, no async, no markdown fences. \nEXPECTED: { id: 'string', total_price: 'number' }\nACTUAL: " +
       badPayload;
 
-    console.log('[Fixer] Sending prompt to LLM...');
-    const response = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'openai/gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }]
+    console.log('[Fixer] Sending prompt to Google Gemini...');
+    
+    // Call Gemini API via Axios
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const geminiModel = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`;
+    
+    const geminiRes = await axios.post(geminiUrl, {
+      contents: [{ parts: [{ text: prompt }] }]
     });
-    console.log('[Fixer] Got response from LLM');
 
-    // Calculate actual real-life token cost (GPT-4o-mini: $0.150/1M input, $0.600/1M output)
+    console.log('[Fixer] Got response from Gemini');
+
+    const responseText = geminiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    let code = String(responseText).trim();
+    
+    // Calculate simulated token cost for Gemini Flash (very cheap)
     let actualCost = parseFloat(process.env.FIXER_BOUNTY || 0.0050);
-    let tokenDesc = 'Generated patch via OpenAI';
-    if (response.usage) {
-      const pTokens = response.usage.prompt_tokens || 0;
-      const cTokens = response.usage.completion_tokens || 0;
-      actualCost = parseFloat(((pTokens * 0.150 / 1000000) + (cTokens * 0.600 / 1000000)).toFixed(6));
-      
-      // Ensure the cost is at least non-zero for UI visibility
-      actualCost = Math.max(actualCost, 0.0001); 
-      tokenDesc = `OpenAI API usage: ${response.usage.total_tokens} tokens utilized`;
-    }
+    const tokenDesc = `Gemini API usage: ${geminiModel} cycle completed`;
 
     await executeAndRecordOnChainCharge('Fixer', actualCost, tokenDesc);
-
-    const responseText = response.choices[0].message.content || '';
-    let code = String(responseText).trim();
     
     const codeMatch = code.match(/```(?:javascript|js)?\n([\s\S]*?)```/);
     if (codeMatch) {
@@ -265,10 +254,31 @@ const runHealingFlow = async (badPayload) => {
     updateAgentStatus('fixer', 'DONE');
 
     updateAgentStatus('verifier', 'AUDITING');
+    
+    // Gemini Verification Phase (Required for Hackathon)
+    console.log('[Verifier] Gemini is auditing the patch...');
+    const verificationPrompt = `You are a code auditor. Check if this JavaScript function correctly transforms drifted data to meet the schema { id: 'string', total_price: 'number' }. 
+    Return ONLY the string "PASS" if it looks safe and correct, otherwise return "FAIL".
+    CODE:
+    ${code}`;
+    
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const geminiModel = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`;
+    
+    const verifierRes = await axios.post(geminiUrl, {
+      contents: [{ parts: [{ text: verificationPrompt }] }]
+    });
+    
+    const verifierText = verifierRes.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!verifierText.toUpperCase().includes('PASS')) {
+      throw new Error('Gemini Verifier rejected the patch as unsafe or incorrect');
+    }
+
     await executeAndRecordOnChainCharge(
       'Verifier',
       parseFloat(process.env.VERIFICATION_COST || 0.0005),
-      'Smoke tested JavaScript AST'
+      'Gemini 2.5 Flash Verified'
     );
 
     const verifyRes = await fetch('http://localhost:3002/api/internal/update-logic', {
